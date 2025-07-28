@@ -4,7 +4,6 @@
 #include<string>
 #include<optional>
 
-
 template<typename Key>
 class HashTraits {
 	static size_t hash(const Key& key, const size_t capacity);
