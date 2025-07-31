@@ -37,7 +37,7 @@ public:
 
 private:
 
-	size_t hashFunction(const Key& key) const;  // return HashTraits<Key>::hash(key, buckets.size());
+	size_t hashFunction(const Key& key) const;
 	
 	class Node {
 	public:
@@ -75,7 +75,7 @@ void HashTable<Key, Value>::insert(const Key& key, const Value& value)
 {
 	while (size_ >= capacity_ * 0.75) relocate();
 
-	int index = hashFunction(key) % size_;
+	int index = hashFunction(key) % capacity_;
 
 	Node* current_item = buckets[index];
 
@@ -95,6 +95,50 @@ void HashTable<Key, Value>::insert(const Key& key, const Value& value)
 	buckets[index] = new Node(key, value, buckets[index]);
 	size_++;
 	
+}
+
+template<typename Key, typename Value>
+std::optional<Value> HashTable<Key, Value>::find(const Key& key) const
+{
+	size_t index = hashFunction(key) % capacity_;
+
+	Node* current = buckets[index];
+
+	while (current != nullptr) {
+		if (current->key_ == key) {
+			return current->value_;
+		}
+		current = current->next_;
+	}
+	return std::nullopt;
+}
+
+template<typename Key, typename Value>
+std::optional<Value> HashTable<Key, Value>::erase(const Key& key)
+{
+	size_t index = hashFunction(key) % capacity_;
+
+	Node* current = buckets[index];
+	Node* prev = nullptr;
+
+	while (current != nullptr) {
+		if (current->key_ == key) {
+			if (prev) {
+				prev->next = current->next;
+			}
+			else {
+				buckets[index] = current->next;
+			}
+
+			Value deleted_ = current->value_;
+			delete current;
+			size_--;
+			return deleted_;
+		}
+		prev = current;
+		current = current->next_;
+	}
+	return std::nullopt;
 }
 
 template<typename Key, typename Value>
@@ -119,4 +163,10 @@ template<typename Key, typename Value>
 inline bool HashTable<Key, Value>::is_full() const
 {
 	return (size_ == capacity_);
+}
+
+template<typename Key, typename Value>
+inline size_t HashTable<Key, Value>::hashFunction(const Key& key) const
+{
+	return HashTraits<Key>::hash(key, capacity_);
 }
